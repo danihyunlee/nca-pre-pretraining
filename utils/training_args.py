@@ -81,6 +81,7 @@ class ModelTrainingArgs(BaseTrainingArgs):
     reinit_modules: List[str] = field(default_factory=list)
     reinit_layer_idxs: List[int] = field(default_factory=lambda: [0, 0])
     weight_tying: int = 0
+    fixed_embed_init: int = 0
 
     # Training hyperparameters
     batch_size: int = 16
@@ -165,6 +166,7 @@ class TrainingArgs:
     reinit_modules: List[str] = field(default_factory=list)
     reinit_layer_idxs: List[int] = field(default_factory=lambda: [0, 0])
     weight_tying: int = 0
+    fixed_embed_init: int = 0
 
     # HYPERPARAMETERS (GENERAL)
     batch_size: int = 16
@@ -318,6 +320,7 @@ def create_parser(for_v2l: bool = False) -> argparse.ArgumentParser:
     parser.add_argument('--reinit_layer_idxs', type=int, nargs=2, default=[0, 0],
                        help='layer indices to reinitialize (start end) -- e.g., --reinit_layer_idxs 0 4')
     parser.add_argument('--weight_tying', type=int, default=0, help='enable weight tying for input and output projections')
+    parser.add_argument('--fixed_embed_init', type=int, default=0, help='init fresh input/output projections with normal(0, 0.02) instead of constructor defaults')
 
     # Training hyperparameters
     parser.add_argument('--batch_size', type=int, default=16, help='batch size for training')  # Aligned to launcher defaults
@@ -573,6 +576,7 @@ def create_nca_parser() -> argparse.ArgumentParser:
     parser.add_argument('--reinit_modules', type=str, nargs='*', default=['embed'], choices=['', 'embed', 'pos', 'attn', 'mlp', 'ln', 'core'], help='list of modules to reinitialize: embed, pos, attn, mlp, ln, core')
     parser.add_argument('--reinit_layer_idxs', type=int, nargs=2, default=[0, 0], help='layer indices to reinitialize (start end) -- e.g., --reinit_layer_idxs 0 4')
     parser.add_argument('--weight_tying', type=int, default=0, help='enable weight tying')
+    parser.add_argument('--fixed_embed_init', type=int, default=0, help='init fresh input/output projections with normal(0, 0.02) instead of constructor defaults')
 
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--val_freq', type=int, default=500)
@@ -720,6 +724,7 @@ def create_base_ft_parser() -> argparse.ArgumentParser:
     parser.add_argument('--reinit_modules', type=str, nargs='*', default=['embed'], help='list of modules to reinitialize: embed, pos, attn, mlp, ln, core')
     parser.add_argument('--reinit_layer_idxs', type=int, nargs=2, default=[0, 0], help='layer indices to reinitialize (start end) -- e.g., --reinit_layer_idxs 0 4')
     parser.add_argument('--weight_tying', type=int, default=0, help='enable weight tying')
+    parser.add_argument('--fixed_embed_init', type=int, default=0, help='init fresh input/output projections with normal(0, 0.02) instead of constructor defaults')
 
     parser.add_argument('--save_path', type=str, default='')
     parser.add_argument('--load_path', type=str, default=None)

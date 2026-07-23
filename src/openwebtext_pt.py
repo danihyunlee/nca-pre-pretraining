@@ -272,6 +272,7 @@ def main(args: OpenWebTextTrainingArgs):
                     frozen_modules=args.freeze_modules,
                     reinit_modules=args.reinit_modules+['embed'],
                     weight_tying=args.weight_tying == 1,
+                    fixed_embed_init=getattr(args, 'fixed_embed_init', 0) == 1,
                 )
     
     if args.pretrain and args.pretrained_from_owt:

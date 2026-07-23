@@ -432,18 +432,26 @@ class DownstreamLlamaLM(BaseDownstreamLlamaModel):
                  output_vocab=None,
                  frozen_modules=None,
                  reinit_modules=None,
-                 weight_tying=False):
+                 weight_tying=False,
+                 fixed_embed_init=False):
         
         super().__init__(model, frozen_modules=frozen_modules, reinit_modules=reinit_modules)
 
         self.vocab_size = vocab_size
         self.weight_tying = weight_tying
         self.n_embd = model.n_embd
+        self.fixed_embed_init = fixed_embed_init
 
         if 'embed' in reinit_modules:
             print(f'Reinitializing input and output projections (init)')
             self.input_proj = nn.Embedding(vocab_size, model.n_embd)
             self.output_proj = nn.Linear(model.n_embd, vocab_size, bias=False)
+            if fixed_embed_init:
+                # match the transformer body's init (normal, std 0.02) instead of
+                # the nn.Embedding/nn.Linear constructor defaults (N(0,1) / kaiming)
+                print(f'Applying fixed 0.02 init to input and output projections (init)')
+                nn.init.normal_(self.input_proj.weight, mean=0.0, std=0.02)
+                nn.init.normal_(self.output_proj.weight, mean=0.0, std=0.02)
         else:
             assert model.vocab_size == vocab_size, f"Model vocabulary size {model.vocab_size} does not match provided vocabulary size {vocab_size}"
             print(f'Using model input and output projections (init)')
@@ -460,6 +468,10 @@ class DownstreamLlamaLM(BaseDownstreamLlamaModel):
         print(f'Reinitializing input and output projections')
         self.input_proj = nn.Embedding(self.vocab_size, self.n_embd)
         self.output_proj = nn.Linear(self.n_embd, self.vocab_size, bias=False)
+        if getattr(self, 'fixed_embed_init', False):
+            print(f'Applying fixed 0.02 init to input and output projections')
+            nn.init.normal_(self.input_proj.weight, mean=0.0, std=0.02)
+            nn.init.normal_(self.output_proj.weight, mean=0.0, std=0.02)
         self._freeze_unfreeze_modules()
     
     def _freeze_unfreeze_modules(self):
